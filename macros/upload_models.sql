@@ -81,3 +81,35 @@
         {{ return("") }}
     {% endif %}
 {%- endmacro %}
+
+{% macro netezza__get_models_dml_sql(models) -%}
+    {% if models != [] %}
+        {% set model_values =[]%}
+            {% for model in models -%}
+            {% do model.pop('raw_code', None) %}
+            {%- set data_row -%}
+                (
+                    '{{ invocation_id }}', {# command_invocation_id #}
+                    '{{ model.unique_id }}', {# node_id #}
+                    '{{ run_started_at }}', {# run_started_at #}
+                    '{{ model.database }}', {# database #}
+                    '{{ model.schema |string }}', {# schema #}
+                    '{{ model.name }}', {# name #}
+                    '{{ model.depends_on.nodes |join("#") }}', {# depends_on_nodes #}
+                    '{{ model.package_name }}', {# package_name #}
+                    '{{ model.original_file_path | replace('\\', '\\\\') }}', {# path #}
+                    '{{ model.checksum.checksum }}', {# checksum #}
+                    '{{ model.config.materialized }}', {# materialization #}
+                    '{{ model.tags|join("#") }}', {# tags #}
+                    '{{ tojson(model.config.meta) |replace("'", '"') | replace("\\", "\\\\") | replace("'", "\\'") | replace('"', '\\"') }}', {# meta #}
+                    '{{ model.alias |string }}' {# alias #}
+                    
+                )
+            {% endset %}
+            {%- do model_values.append(data_row) -%}
+            {%- endfor %}
+        {{ return(model_values) }}
+    {% else %}
+        {{ return([]) }}
+    {% endif %}
+{%- endmacro %}

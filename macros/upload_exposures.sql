@@ -80,3 +80,34 @@
         {{ return("") }}
     {% endif %}
 {%- endmacro %}
+
+{% macro netezza__get_exposures_dml_sql(exposures) -%}
+    {% if exposures != [] %}
+        {% set exposure_values = [] %}
+            {% for exposure in exposures -%}
+            {%- set data_row -%}
+                (
+                    '{{ invocation_id }}', {# command_invocation_id #}
+                    '{{ exposure.unique_id | replace("'","\\'") }}', {# node_id #}
+                    '{{ run_started_at }}', {# run_started_at #}
+                    '{{ exposure.name | replace("'","\\'") }}', {# name #}
+                    '{{ exposure.type }}', {# type #}
+                    '{{ tojson(exposure.owner) | replace("\\", "\\\\") | replace("'", "\\'") | replace('"', '\\"') }}', {# owner #}
+                    '{{ exposure.maturity }}', {# maturity #}
+                    '{{ exposure.original_file_path | replace('\\', '\\\\') }}', {# path #}
+                    """{{ exposure.description | replace("'","\\'") }}""", {# description #}
+                    '{{ exposure.url }}', {# url #}
+                    '{{ exposure.package_name }}', {# package_name #}
+                    '{{ tojson(exposure.depends_on.nodes) | replace("\\", "\\\\") | replace("'", "\\'") | replace('"', '\\"') }}', {# depends_on_nodes #}
+                    '{{ tojson(exposure.tags) | replace("\\", "\\\\") | replace("'", "\\'") | replace('"', '\\"') }}', {# tags #}
+                    '{{ tojson(exposure) | replace("\\", "\\\\") | replace("'", "\\'") | replace('"', '\\"') }}' {# all_results #}
+                )
+            {% endset %}
+            {%- do exposure_values.append(data_row) -%}
+            {%- endfor %}
+        
+        {{ return(exposure_values) }}
+    {% else %}
+        {{ return([]) }}
+    {% endif %}
+{%- endmacro %}

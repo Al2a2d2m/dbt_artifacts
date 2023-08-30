@@ -81,3 +81,33 @@
         {{ return("") }}
     {% endif %}
 {%- endmacro %}
+
+{% macro netezza__get_snapshots_dml_sql(snapshots) -%}
+    {% if snapshots != [] %}
+        {% set snapshot_values = [] %}
+            {% for snapshot in snapshots -%}
+            {%- set data_row -%}
+                (
+                    '{{ invocation_id }}', {# command_invocation_id #}
+                    '{{ snapshot.unique_id }}', {# node_id #}
+                    '{{ run_started_at }}', {# run_started_at #}
+                    '{{ snapshot.database }}', {# database #}
+                    '{{ snapshot.schema }}', {# schema #}
+                    '{{ snapshot.name }}', {# name #}
+                    '{{ tojson(snapshot.depends_on.nodes) |join("#") }}', {# depends_on_nodes #}
+                    '{{ snapshot.package_name }}', {# package_name #}
+                    '{{ snapshot.original_file_path | replace('\\', '\\\\') }}', {# path #}
+                    '{{ snapshot.checksum.checksum }}', {# checksum #}
+                    '{{ snapshot.config.strategy }}', {# strategy #}
+                    '{{ tojson(snapshot.config.meta) |replace("'", '"') | replace("\\", "\\\\") | replace("'", "\\'") | replace('"', '\\"') }}', {# meta #}                    
+                    '{{ snapshot.alias }}', {# alias #}
+                    '{{ tojson(snapshot) |replace("'", '"') | replace("\\", "\\\\") | replace("'", "\\'") | replace('"', '\\"') }}'{# all_results #}
+                )
+            {% endset %}
+            {%- do snapshot_values.append(data_row) -%}
+            {%- endfor %}
+        {{ return(snapshot_values) }}
+    {% else %}
+        {{ return([]) }}
+    {% endif %}
+{%- endmacro %}

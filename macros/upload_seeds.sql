@@ -74,3 +74,33 @@
         {{ return("") }}
     {% endif %}
 {%- endmacro %}
+
+{% macro netezza__get_seeds_dml_sql(seeds) -%}
+    {% if seeds != [] %}
+        {% set seed_values =[]%}
+            {% for seed in seeds -%}
+            {%- set data_row -%}    
+                (
+                    '{{ invocation_id }}', {# command_invocation_id #}
+                    '{{ seed.unique_id }}', {# node_id #}
+                    '{{ run_started_at }}', {# run_started_at #}
+                    '{{ seed.database }}', {# database #}
+                    '{{ seed.schema }}', {# schema #}
+                    '{{ seed.name }}', {# name #}
+                    '{{ seed.package_name }}', {# package_name #}
+                    '{{ seed.original_file_path | replace('\\', '\\\\') }}', {# path #}
+                    '{{ seed.checksum.checksum }}', {# checksum #}
+                    '{{ tojson(seed.config.meta) | replace("\\", "\\\\") | replace("'", "\\'") | replace('"', '\\"') }}', {# meta #}
+
+                    '{{ seed.alias }}', {# alias #}
+                    '{{ tojson(seed) | replace("\\", "\\\\") | replace("'", "\\'") | replace('"', '\\"') }}' {# all_results #}
+
+                )   
+                {% endset %}
+            {%- do seed_values.append(data_row) -%}
+            {%- endfor %}
+        {{ return(seed_values) }}
+    {% else %}
+        {{ return([]) }}
+    {% endif %}
+{%- endmacro %}

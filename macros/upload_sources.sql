@@ -70,3 +70,31 @@
         {{ return("") }}
     {% endif %}
 {%- endmacro %}
+
+{% macro netezza__get_sources_dml_sql(sources) -%}
+    {% if sources != [] %}
+        {% set source_values =[]%}
+            {% for source in sources -%}
+            {%- set data_row -%}
+                (
+                    '{{ invocation_id }}', {# command_invocation_id #}
+                    '{{ source.unique_id }}', {# node_id #}
+                    '{{ run_started_at }}', {# run_started_at #}
+                    '{{ source.database }}', {# database #}
+                    '{{ source.schema }}', {# schema #}
+                    '{{ source.source_name }}', {# source_name #}
+                    '{{ source.loader }}', {# loader #}
+                    '{{ source.name }}', {# name #}
+                    '{{ source.identifier }}', {# identifier #}
+                    '{{ source.loaded_at_field | replace("'","\\'") }}', {# loaded_at_field #}
+                    '{{ tojson(source.freshness) |replace("'", '"') | replace("\\", "\\\\") | replace("'", "\\'") | replace('"', '\\"') }}', {# freshness #}
+                    '{{ tojson(source) |replace("'", '"') | replace("\\", "\\\\") | replace("'", "\\'") | replace('"', '\\"') }}'{# all_results #}
+                )
+            {% endset %}
+            {%- do source_values.append(data_row) -%}
+            {%- endfor %}
+         {{ return(model_values) }}
+    {% else %}
+        {{ return([]) }}
+    {% endif %}
+{%- endmacro %}

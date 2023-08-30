@@ -34,5 +34,21 @@
 
 {%- endmacro %}
 
+{% macro netezza__insert_into_metadata_table(database_name, schema_name, table_name, content) -%}
+
+        {% set insert_into_table_query %}
+        {% for data_row in content -%}
+        insert into {{database_name}}.{{ schema_name }}.{{ table_name }}
+        VALUES
+        {{ data_row | safe }}
+
+        {% if not loop.last %}; {% endif %}
+        {%- endfor %}
+        {% endset %}
+
+        {% do run_query(insert_into_table_query) %}
+
+{%- endmacro %}
+
 {% macro default__insert_into_metadata_table(database_name, schema_name, table_name, content) -%}
 {%- endmacro %}

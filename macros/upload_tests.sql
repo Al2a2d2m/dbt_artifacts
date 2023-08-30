@@ -61,3 +61,28 @@
         {{ return("") }}
     {% endif %}
 {%- endmacro %}
+
+{% macro netezza__get_tests_dml_sql(tests) -%}
+    {% if tests != [] %}
+        {% set test_values =[]%}
+            {% for test in tests -%}
+            {%- set data_row -%}
+                (
+                    '{{ invocation_id }}', {# command_invocation_id #}
+                    '{{ test.unique_id }}', {# node_id #}
+                    '{{ run_started_at }}', {# run_started_at #}
+                    '{{ test.name }}', {# name #}
+                    '{{ test.depends_on.nodes |join("#") }}', {# depends_on_nodes #}
+                    '{{ test.package_name }}', {# package_name #}
+                    '{{ test.original_file_path | replace('\\', '\\\\') }}', {# test_path #}
+                    '{{ test.tags |join("#")}}', {# tags #}
+                    '{{ tojson(test) |replace("'", '"') | replace("\\", "\\\\") | replace("'", "\\'") | replace('"', '\\"') }}' {# all_fields #}
+                )
+            {% endset %}
+            {%- do test_values.append(data_row) -%}
+            {%- endfor %}
+        {{ return(test_values) }}
+    {% else %}
+        {{ return([]) }}
+    {% endif %}
+{%- endmacro %}
